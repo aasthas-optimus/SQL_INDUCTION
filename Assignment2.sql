@@ -98,7 +98,8 @@ UPDATE EmployeeMaster SET EmpDOB='1988-02-28' WHERE EmpID=1003;
 --QUESTION2
 
 SELECT (EmpFName+' '+EmpMName+' '+EmpLName) AS Name,
-Increment,PreviousSalary,CurrentSalary,TotalWorkedHours
+Increment,PreviousSalary,CurrentSalary, TotalWorkedHours,
+Sub2.ActivityID AS LastWorkedId, Sub2.AteendanceEndHrs AS LastHourWorked
 FROM(
 SELECT EmpID,
 CASE
@@ -113,7 +114,29 @@ CASE
 END AS PreviousSalary,
 MAX(NewSalary) AS CurrentSalary
 FROM TSalary
-GROUP BY EmpID) AS Subquery1 JOIN 
-(SELECT EmpID,SUM(AteendanceEndHrs)AS TotalWorkedHours FROM TAttenDet GROUP BY EmpID)AS SubQuery2 
-ON Subquery1.EmpID=SubQuery2.EmpID JOIN EmployeeMaster ON EmployeeMaster.EmpID=Subquery1.EmpID;
+GROUP BY EmpID) AS Subquery1
+
+JOIN EmployeeMaster
+ON EmployeeMaster.EmpId=Subquery1.EmpID
+
+JOIN
+(
+SELECT EmpID, SUM(AteendanceEndHrs)AS TotalWorkedHours
+FROM TAttenDet
+GROUP BY EmpID
+) AS Subquery2
+ON Subquery1.EmpId=Subquery2.EmpId
+
+
+JOIN  (SELECT Sub1.EmpID,ActivityID,AteendanceEndHrs 
+       FROM TAttenDet AS Sub1
+	   JOIN (SELECT EmpId, MAX(AttenStartDateTime)m  
+	   FROM TAttenDet GROUP BY EmpId)AS Sub
+	   ON Sub.EmpId=Sub1.EmpId 
+	   WHERE Sub1.AttenStartDateTime=Sub.m) AS Sub2
+ON Sub2.EmpId=EmployeeMaster.EmpID
+
+
+
+
 
